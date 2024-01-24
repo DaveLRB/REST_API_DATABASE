@@ -5,7 +5,6 @@ import com.school.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -37,14 +36,9 @@ public class UserController {
         service.updateUser(userId, updatedUser);
     }
 
-    @PatchMapping("/{userId}/username")
-    public void updateUsername(@PathVariable Long userId, @RequestBody UserEntity updatedUsername) {
-        service.updateUsername(userId, updatedUsername);
-    }
-
-    @PatchMapping("/{userId}/password")
-    public void updatePassword(@PathVariable Long userId, @RequestBody UserEntity updatedPassword) {
-        service.updatePassword(userId, updatedPassword);
+    @PatchMapping("/{userId}")
+    public void patchUser(@PathVariable Long userId, @RequestBody UserEntity updated) {
+        service.patchUser(userId, updated);
     }
 
     @DeleteMapping("/{userId}")

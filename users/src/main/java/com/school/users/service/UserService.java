@@ -3,7 +3,6 @@ package com.school.users.service;
 import com.school.users.entity.UserEntity;
 import com.school.users.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -38,25 +37,21 @@ public class UserService {
         }
     }
 
-    public void updateUsername(Long userId, UserEntity user) {
+    public void patchUser(Long userId, UserEntity user) {
         if (repository.existsById(userId)) {
             UserEntity existingUser = repository.findById(userId).orElse(null);
-            if (existingUser != null) {
-                existingUser.setUsername(user.getUsername());
-                repository.save(existingUser);
+            if (user.getUsername() != null) {
+                assert existingUser != null;
+                existingUser.setUsername((user.getUsername()));
             }
+            if (user.getPassword() != null) {
+                assert existingUser != null;
+                existingUser.setPassword((user.getPassword()));
+            }
+            assert existingUser != null;
+            repository.save(existingUser);
         }
     }
-    public void updatePassword(Long userId, UserEntity user) {
-        if (repository.existsById(userId)) {
-            UserEntity existingUser = repository.findById(userId).orElse(null);
-            if (existingUser != null) {
-                existingUser.setPassword(user.getPassword());
-                repository.save(existingUser);
-            }
-        }
-    }
-
 
     public void deleteUser(Long userId) {
         repository.deleteById(userId);
