@@ -1,9 +1,8 @@
-package com.example.Users2.controller;
+package com.school.users.controller;
 
-import com.example.Users2.entity.UserEntity;
-import com.example.Users2.service.UserService;
+import com.school.users.entity.UserEntity;
+import com.school.users.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,10 +14,9 @@ import java.util.Optional;
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
     private UserService service;
 
-    @GetMapping("/getAll")
+    @GetMapping
     public List<UserEntity> getUsers() {
         return service.getAllUsers();
     }
@@ -28,7 +26,7 @@ public class UserController {
         return service.getUserById(userId);
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public void createUser(@RequestBody UserEntity user) {
         service.createUser(user);
     }
@@ -38,13 +36,14 @@ public class UserController {
         service.updateUser(userId, updatedUser);
     }
 
-    @PatchMapping("/username/{userId}")
-    public void updateUsername(@PathVariable Long userId, @RequestBody UserEntity updatedUsername){
-        service.updateUsername(userId,updatedUsername);
+    @PatchMapping("/{userId}/username")
+    public void updateUsername(@PathVariable Long userId, @RequestBody UserEntity updatedUsername) {
+        service.updateUsername(userId, updatedUsername);
     }
-    @PatchMapping("/password/{userId}")
-    public void updatePassword(@PathVariable Long userId, @RequestBody UserEntity updatedPassword){
-        service.updatePassword(userId,updatedPassword);
+
+    @PatchMapping("/{userId}/password")
+    public void updatePassword(@PathVariable Long userId, @RequestBody UserEntity updatedPassword) {
+        service.updatePassword(userId, updatedPassword);
     }
 
     @DeleteMapping("/{userId}")
