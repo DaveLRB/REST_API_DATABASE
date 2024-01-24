@@ -23,33 +23,37 @@ public class UserService {
         return repository.findById(userId);
     }
 
-    public void createUser(UserEntity user) {
-        repository.save(user);
+    public UserEntity createUser(UserEntity user) {
+        return repository.save(user);
     }
 
-    public void updateUser(Long userId, UserEntity user) {
+    public void updateUser(Long userId, UserEntity updatedUser) {
         if (repository.existsById(userId)) {
-            UserEntity userEntity = UserEntity.builder()
-                    .username((user.getUsername()))
-                    .password(user.getPassword())
-                    .build();
-            repository.save(userEntity);
+            UserEntity existingUser = repository.findById(userId).orElse(null);
+            if (existingUser != null) {
+                existingUser.setUsername(updatedUser.getUsername());
+                existingUser.setPassword(updatedUser.getPassword());
+                repository.save(existingUser);
+            }
         }
     }
 
     public void updateUsername(Long userId, UserEntity user) {
         if (repository.existsById(userId)) {
-            UserEntity userEntity = new UserEntity();
-            userEntity.setUsername(user.getUsername());
-            repository.save(userEntity);
+            UserEntity existingUser = repository.findById(userId).orElse(null);
+            if (existingUser != null) {
+                existingUser.setUsername(user.getUsername());
+                repository.save(existingUser);
+            }
         }
     }
-
     public void updatePassword(Long userId, UserEntity user) {
         if (repository.existsById(userId)) {
-            UserEntity userEntity = new UserEntity();
-            userEntity.setPassword(user.getPassword());
-            repository.save(userEntity);
+            UserEntity existingUser = repository.findById(userId).orElse(null);
+            if (existingUser != null) {
+                existingUser.setPassword(user.getPassword());
+                repository.save(existingUser);
+            }
         }
     }
 
