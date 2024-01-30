@@ -14,8 +14,7 @@ import lombok.*;
 public class UserEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(unique = true)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -23,4 +22,9 @@ public class UserEntity {
 
     @Column(nullable = false)
     private String password;
+
+    public UserEntity(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
 }

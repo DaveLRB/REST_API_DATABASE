@@ -4,6 +4,9 @@ import com.school.users.entity.UserEntity;
 import com.school.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +30,8 @@ public class UserController {
     }
 
     @PostMapping
-    public  UserEntity createUser(@RequestBody UserEntity user) {
-        return service.createUser(user);
+    public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
+        return ResponseEntity.status(201).body(service.createUser(user));
     }
 
     @PutMapping("/{userId}")
