@@ -2,11 +2,10 @@ package com.school.users.service;
 
 import com.school.users.entity.UserEntity;
 import com.school.users.exceptions.InvalidRequestException;
+import com.school.users.exceptions.UserIdNotFoundException;
 import com.school.users.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,20 +39,19 @@ public class UserService {
         }
     }*/
 
-    public UserEntity updateUser(@RequestBody UserEntity user) throws ChangeSetPersister.NotFoundException, InvalidRequestException {
-        if (user == null || user.getId() == null) {
-            throw new InvalidRequestException("Username or ID must not be null!");
+    public void updateUser(Long userId, UserEntity user){
+        if (user == null || userId == null) {
+            throw new InvalidRequestException("Username, password or ID must not be null!");
         }
-        Optional<UserEntity> optionalUser = repository.findById(user.getId());
+        Optional<UserEntity> optionalUser = repository.findById(userId);
         if (optionalUser.isEmpty()) {
-            throw new ChangeSetPersister.NotFoundException();
+            throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
         }
         UserEntity existingUser = optionalUser.get();
 
         existingUser.setUsername(user.getUsername());
         existingUser.setPassword(user.getPassword());
-
-        return repository.save(existingUser);
+        repository.save(existingUser);
     }
 
     public void patchUser(Long userId, UserEntity user) {
@@ -73,6 +71,9 @@ public class UserService {
     }
 
     public void deleteUser(Long userId) {
+        if(repository.findById(userId).isEmpty()){
+            throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
+        }
         repository.deleteById(userId);
     }
 }

@@ -1,6 +1,8 @@
 package com.school.users.controller;
 
 import com.school.users.entity.UserEntity;
+import com.school.users.exceptions.InvalidRequestException;
+import com.school.users.exceptions.UserIdNotFoundException;
 import com.school.users.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,11 +33,11 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
-        return ResponseEntity.status(201).body(service.createUser(user));
+        return ResponseEntity.status(200).body(service.createUser(user));
     }
 
     @PutMapping("/{userId}")
-    public void updateUser(@PathVariable Long userId, @RequestBody UserEntity updatedUser) {
+    public void updateUser(@PathVariable Long userId, @RequestBody UserEntity updatedUser){
         service.updateUser(userId, updatedUser);
     }
 
