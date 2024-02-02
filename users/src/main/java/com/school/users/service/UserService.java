@@ -3,6 +3,7 @@ package com.school.users.service;
 import com.school.users.entity.UserEntity;
 import com.school.users.exceptions.InvalidRequestException;
 import com.school.users.exceptions.UserIdNotFoundException;
+import com.school.users.exceptions.UserListNotFoundException;
 import com.school.users.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,39 +20,30 @@ public class UserService {
     public List<UserEntity> getAllUsers() {
         return repository.findAll();
     }
-
     public Optional<UserEntity> getUserById(Long userId) {
+        if (repository.findById(userId).isEmpty()) {
+            throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
+        }
         return repository.findById(userId);
     }
 
     public UserEntity createUser(UserEntity user) {
+        if (user.getUsername() == null && user.getPassword() == null) {
+            throw new InvalidRequestException("Username, password must not be null!");
+        }
         return repository.save(user);
     }
 
-   /* public void updateUser(Long userId, UserEntity updatedUser)  {
-        if (repository.existsById(userId)) {
-            UserEntity existingUser = repository.findById(userId).orElse(null);
-            if (existingUser != null) {
-                existingUser.setUsername(updatedUser.getUsername());
-                existingUser.setPassword(updatedUser.getPassword());
-                repository.save(existingUser);
-            }
+    public void updateUser(Long userId, UserEntity user) {
+        if (user == null) {
+            throw new InvalidRequestException("Username, password must not be null!");
         }
-    }*/
+        UserEntity userEntity = repository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException("Dave"));
 
-    public void updateUser(Long userId, UserEntity user){
-        if (user == null || userId == null) {
-            throw new InvalidRequestException("Username, password or ID must not be null!");
-        }
-        Optional<UserEntity> optionalUser = repository.findById(userId);
-        if (optionalUser.isEmpty()) {
-            throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
-        }
-        UserEntity existingUser = optionalUser.get();
-
-        existingUser.setUsername(user.getUsername());
-        existingUser.setPassword(user.getPassword());
-        repository.save(existingUser);
+        userEntity.setUsername(user.getUsername());
+        userEntity.setPassword(user.getPassword());
+        repository.save(userEntity);
     }
 
     public void patchUser(Long userId, UserEntity user) {
@@ -71,7 +63,7 @@ public class UserService {
     }
 
     public void deleteUser(Long userId) {
-        if(repository.findById(userId).isEmpty()){
+        if (repository.findById(userId).isEmpty()) {
             throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
         }
         repository.deleteById(userId);
