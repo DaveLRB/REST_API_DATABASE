@@ -1,11 +1,8 @@
 package com.school.users.controllerTest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.users.controller.UserController;
 import com.school.users.entity.UserEntity;
-import com.school.users.exceptions.InvalidRequestException;
-import com.school.users.exceptions.UserIdNotFoundException;
 import com.school.users.repository.UserRepository;
 import com.school.users.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,20 +14,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.util.AssertionErrors.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,8 +40,11 @@ public class UserControllerTest {
     @Autowired
     ObjectMapper mapper;
 
+   @InjectMocks
+    private UserController controller;
+
     @InjectMocks
-    private UserService userService;
+    private UserService service;
 
     @BeforeEach
     public void setup() {
@@ -77,17 +72,29 @@ public class UserControllerTest {
     }
 
     @Test
+    public void testGetAllUsersEmptyList() throws Exception {
+        List<UserEntity> allUsers = new ArrayList<>(List.of());
+        Mockito.when(userRepository.findAll()).thenReturn(allUsers);
+        mockMvc.perform(MockMvcRequestBuilders
+                        .get("/user")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(0)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     public void testGetUserByIdSuccess() throws Exception {
         UserEntity user1 = UserEntity.builder()
+                .id(1L)
                 .username("Minecraft")
                 .password("aiaiai")
                 .build();
         Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
         mockMvc.perform(MockMvcRequestBuilders
-                        .get("/user/1")
+                        .get("/user/{id}", user1.getId())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$", notNullValue()))
-                .andExpect(jsonPath("$.username", is("Minecraft")))
+                .andExpect(jsonPath("$.username", is(user1.getUsername())))
+                .andExpect(jsonPath("$.id", is(user1.getId().intValue())))
                 .andExpect(status().isOk());
     }
 
@@ -165,7 +172,7 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUserNullId() throws Exception {
-        long id = 2;
+        long id = 2L;
         UserEntity updateUser = UserEntity.builder()
                 .username("Dave")
                 .password("aiaiai")
@@ -183,7 +190,7 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUserNotFound() throws Exception {
-        long id = 1;
+        long id = 1L;
         UserEntity updateUser = UserEntity.builder()
                 .id(3L)
                 .username("Dave")
@@ -222,9 +229,8 @@ public class UserControllerTest {
                 .password("aiaiai")
                 .build();
         Mockito.when(userRepository.findById(id)).thenReturn(Optional.empty());
-        Mockito.when(userRepository.save(deleteUser)).thenReturn(deleteUser);
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
-                .put("/user/{id}", id)
+                .delete("/user/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(this.mapper.writeValueAsString(deleteUser));
@@ -232,6 +238,6 @@ public class UserControllerTest {
                 .andExpect(status().isBadRequest());
     }
 }
-//TODO patch_success and patch_error
+
 
 

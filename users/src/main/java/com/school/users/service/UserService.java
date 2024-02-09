@@ -3,7 +3,6 @@ package com.school.users.service;
 import com.school.users.entity.UserEntity;
 import com.school.users.exceptions.InvalidRequestException;
 import com.school.users.exceptions.UserIdNotFoundException;
-import com.school.users.exceptions.UserListNotFoundException;
 import com.school.users.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,9 +19,10 @@ public class UserService {
     public List<UserEntity> getAllUsers() {
         return repository.findAll();
     }
+
     public Optional<UserEntity> getUserById(Long userId) {
         if (repository.findById(userId).isEmpty()) {
-            throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
+            throw new UserIdNotFoundException("User ID " + userId + " doesn't exist");
         }
         return repository.findById(userId);
     }
@@ -34,7 +34,7 @@ public class UserService {
         return repository.save(user);
     }
 
-    public void updateUser(Long userId, UserEntity user) {
+    public UserEntity updateUser(Long userId, UserEntity user) {
         if (user == null) {
             throw new InvalidRequestException("Username, password must not be null!");
         }
@@ -44,6 +44,7 @@ public class UserService {
         userEntity.setUsername(user.getUsername());
         userEntity.setPassword(user.getPassword());
         repository.save(userEntity);
+        return userEntity;
     }
 
     public void patchUser(Long userId, UserEntity user) {
@@ -63,9 +64,9 @@ public class UserService {
     }
 
     public void deleteUser(Long userId) {
-        if (repository.findById(userId).isEmpty()) {
-            throw new UserIdNotFoundException("User ID" + userId + "doesn't exist");
-        }
+        Optional<UserEntity> userOptional = repository.findById(userId);
+        if (userOptional.isEmpty()) throw new UserIdNotFoundException("User with ID " + userId + " not found");
         repository.deleteById(userId);
     }
 }
+

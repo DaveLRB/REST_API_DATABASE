@@ -1,13 +1,10 @@
 package com.school.users.controller;
 
 import com.school.users.entity.UserEntity;
-import com.school.users.exceptions.InvalidRequestException;
-import com.school.users.exceptions.UserIdNotFoundException;
+
 import com.school.users.service.UserService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -15,12 +12,15 @@ import java.util.Optional;
 
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/user")
 public class UserController {
-    @Autowired
-    private UserService service;
 
+    private final UserService service;
+
+    @Autowired
+    public UserController(UserService service) {
+        this.service = service;
+    }
     @GetMapping
     public List<UserEntity> getUsers() {
         return service.getAllUsers();
