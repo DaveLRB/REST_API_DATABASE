@@ -1,5 +1,7 @@
 package com.school.users.controllerTest;
 
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.school.users.controller.UserController;
 import com.school.users.entity.UserEntity;
@@ -27,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters=false)
 public class UserControllerTest {
 
     @Autowired
@@ -35,7 +37,7 @@ public class UserControllerTest {
 
     @MockBean
     @Autowired
-    private UserRepository userRepository;
+    private UserRepository repository;
 
     @Autowired
     ObjectMapper mapper;
@@ -62,7 +64,7 @@ public class UserControllerTest {
                 .password("aiaiai")
                 .build();
         List<UserEntity> allUsers = new ArrayList<>(Arrays.asList(user1, user2));
-        Mockito.when(userRepository.findAll()).thenReturn(allUsers);
+        Mockito.when(repository.findAll()).thenReturn(allUsers);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/user")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -74,7 +76,7 @@ public class UserControllerTest {
     @Test
     public void testGetAllUsersEmptyList() throws Exception {
         List<UserEntity> allUsers = new ArrayList<>(List.of());
-        Mockito.when(userRepository.findAll()).thenReturn(allUsers);
+        Mockito.when(repository.findAll()).thenReturn(allUsers);
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/user")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -89,7 +91,7 @@ public class UserControllerTest {
                 .username("Minecraft")
                 .password("aiaiai")
                 .build();
-        Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+        Mockito.when(repository.findById(user1.getId())).thenReturn(Optional.of(user1));
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/user/{id}", user1.getId())
                         .contentType(MediaType.APPLICATION_JSON))
@@ -105,7 +107,7 @@ public class UserControllerTest {
                 .username("Mal")
                 .password("Dito")
                 .build();
-        Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(repository.findById(user.getId())).thenReturn(Optional.of(user));
         mockMvc.perform(MockMvcRequestBuilders
                         .get("/user/{id}", 1)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -119,7 +121,7 @@ public class UserControllerTest {
                 .username("Dave")
                 .password("YOLO")
                 .build();
-        Mockito.when(userRepository.save(newUser)).thenReturn(newUser);
+        Mockito.when(repository.save(newUser)).thenReturn(newUser);
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
                 .post("/user")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +138,7 @@ public class UserControllerTest {
         UserEntity newUser = UserEntity.builder()
                 .id(1L)
                 .build();
-        Mockito.when(userRepository.save(newUser)).thenReturn(newUser);
+        Mockito.when(repository.save(newUser)).thenReturn(newUser);
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
                 .post("/user")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -148,26 +150,28 @@ public class UserControllerTest {
 
     @Test
     public void testUpdateUserSuccess() throws Exception {
+        long userId = 1L;
         UserEntity user1 = UserEntity.builder()
-                .id(1L)
+                .id(userId)
                 .username("Minecraft")
                 .password("aiaiai")
                 .build();
         UserEntity updatedUser = UserEntity.builder()
-                .id(1L)
+                .id(userId)
                 .username("Dave")
                 .password("YOLO")
                 .build();
-        Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
-        Mockito.when(userRepository.save(updatedUser)).thenReturn(updatedUser);
-        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/user")
+        Mockito.when(repository.findById(user1.getId())).thenReturn(Optional.of(user1));
+        Mockito.when(repository.save(updatedUser)).thenReturn(updatedUser);
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+                .put("/user/{userId}", userId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(this.mapper.writeValueAsString(updatedUser));
         mockMvc.perform(mockRequest)
                 .andExpect(jsonPath("$", notNullValue()))
                 .andExpect(jsonPath("$.username", is("Dave")))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -177,8 +181,24 @@ public class UserControllerTest {
                 .username("Dave")
                 .password("aiaiai")
                 .build();
-        Mockito.when(userRepository.findById(id)).thenReturn(Optional.empty());
-        Mockito.when(userRepository.save(updateUser)).thenReturn(updateUser);
+        Mockito.when(repository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(repository.save(updateUser)).thenReturn(updateUser);
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+                .put("/user/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(this.mapper.writeValueAsString(updateUser));
+        mockMvc.perform(mockRequest)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testUpdateUserWithNullUserBody() throws Exception {
+        long id = 2L;
+        UserEntity updateUser = UserEntity.builder()
+                .build();
+        Mockito.when(repository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(repository.save(updateUser)).thenReturn(updateUser);
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
                 .put("/user/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -196,13 +216,58 @@ public class UserControllerTest {
                 .username("Dave")
                 .password("aiaiai")
                 .build();
-        Mockito.when(userRepository.findById(id)).thenReturn(Optional.empty());
-        Mockito.when(userRepository.save(updateUser)).thenReturn(updateUser);
+        Mockito.when(repository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(repository.save(updateUser)).thenReturn(updateUser);
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
                 .put("/user/{id}", 3L)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .content(this.mapper.writeValueAsString(updateUser));
+        mockMvc.perform(mockRequest)
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testPatchUpdateSuccess() throws Exception {
+        long userId = 1L;
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .username("Minecraft")
+                .password("aiaiai")
+                .build();
+        UserEntity patchUpdatedUser = UserEntity.builder()
+                .id(userId)
+                .username("Dave")
+                .build();
+        Mockito.when(repository.findById(user.getId())).thenReturn(Optional.of(user));
+        Mockito.when(repository.save(patchUpdatedUser)).thenReturn(patchUpdatedUser);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+                .patch("/user/{userId}", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(this.mapper.writeValueAsString(patchUpdatedUser));
+        mockMvc.perform(mockRequest)
+                .andExpect(jsonPath("$", notNullValue()))
+                .andExpect(jsonPath("$.username", is("Dave")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    public void testPatchUpdateNullBody() throws Exception {
+        long userId = 1L;
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .build();
+
+        Mockito.when(repository.findById(user.getId())).thenReturn(Optional.of(user));
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
+                .patch("/user/{userId}", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .content("");
+
         mockMvc.perform(mockRequest)
                 .andExpect(status().isBadRequest());
     }
@@ -214,7 +279,7 @@ public class UserControllerTest {
                 .username("Diva")
                 .password("Nona")
                 .build();
-        Mockito.when(userRepository.findById(user1.getId())).thenReturn(Optional.of(user1));
+        Mockito.when(repository.findById(user1.getId())).thenReturn(Optional.of(user1));
         mockMvc.perform(MockMvcRequestBuilders
                         .delete("/user/1")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -228,7 +293,7 @@ public class UserControllerTest {
                 .username("Dave")
                 .password("aiaiai")
                 .build();
-        Mockito.when(userRepository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(repository.findById(id)).thenReturn(Optional.empty());
         MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders
                 .delete("/user/{id}", id)
                 .contentType(MediaType.APPLICATION_JSON)

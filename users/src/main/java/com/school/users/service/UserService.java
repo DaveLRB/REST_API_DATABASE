@@ -29,38 +29,40 @@ public class UserService {
 
     public UserEntity createUser(UserEntity user) {
         if (user.getUsername() == null && user.getPassword() == null) {
-            throw new InvalidRequestException("Username, password must not be null!");
+            throw new InvalidRequestException("Username, password must not be null");
         }
         return repository.save(user);
     }
 
     public UserEntity updateUser(Long userId, UserEntity user) {
         if (user == null) {
-            throw new InvalidRequestException("Username, password must not be null!");
+            throw new InvalidRequestException("Username and password must not be null!");
         }
-        UserEntity userEntity = repository.findById(userId)
-                .orElseThrow(() -> new UserIdNotFoundException("Dave"));
+        UserEntity updatedUser = repository.findById(userId)
+                .orElseThrow(() -> new UserIdNotFoundException("User ID " + userId + " doesn't exist"));
 
-        userEntity.setUsername(user.getUsername());
-        userEntity.setPassword(user.getPassword());
-        repository.save(userEntity);
-        return userEntity;
+        updatedUser.setUsername(user.getUsername());
+        updatedUser.setPassword(user.getPassword());
+        repository.save(updatedUser);
+        return updatedUser;
     }
 
-    public void patchUser(Long userId, UserEntity user) {
-        if (repository.existsById(userId)) {
-            UserEntity existingUser = repository.findById(userId).orElse(null);
-            if (user.getUsername() != null) {
-                assert existingUser != null;
-                existingUser.setUsername((user.getUsername()));
-            }
-            if (user.getPassword() != null) {
-                assert existingUser != null;
-                existingUser.setPassword((user.getPassword()));
-            }
-            assert existingUser != null;
-            repository.save(existingUser);
+    public UserEntity patchUser(Long userId, UserEntity user) {
+        if (user == null || user.getUsername() == null && user.getPassword() == null) {
+            throw new InvalidRequestException("Username and password must not be null!");
         }
+            UserEntity existingUser = repository.findById(userId)
+                    .orElseThrow(()-> new UserIdNotFoundException("User with ID" + userId + " not found"));
+
+                if (user.getUsername() != null) {
+                    existingUser.setUsername(user.getUsername());
+                }
+                if (user.getPassword() != null) {
+                    existingUser.setPassword(user.getPassword());
+                }
+                repository.save(existingUser);
+
+        return existingUser;
     }
 
     public void deleteUser(Long userId) {

@@ -1,7 +1,6 @@
 package com.school.users.controller;
 
 import com.school.users.entity.UserEntity;
-
 import com.school.users.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -21,6 +20,7 @@ public class UserController {
     public UserController(UserService service) {
         this.service = service;
     }
+
     @GetMapping
     public List<UserEntity> getUsers() {
         return service.getAllUsers();
@@ -37,14 +37,16 @@ public class UserController {
     }
 
     @PutMapping("/{userId}")
-    public void updateUser(@PathVariable Long userId, @RequestBody UserEntity updatedUser){
-        service.updateUser(userId, updatedUser);
+    public ResponseEntity<UserEntity> updateUser(@PathVariable Long userId, @RequestBody UserEntity updateUser){
+        return ResponseEntity.status(200).body(service.updateUser(userId, updateUser));
+
     }
 
     @PatchMapping("/{userId}")
-    public void patchUser(@PathVariable Long userId, @RequestBody UserEntity updated) {
-        service.patchUser(userId, updated);
+    public ResponseEntity<UserEntity> patchUser(@PathVariable Long userId, @RequestBody UserEntity updated) {
+        return ResponseEntity.status(200).body(service.patchUser(userId, updated));
     }
+
 
     @DeleteMapping("/{userId}")
     public void deleteUser(@PathVariable Long userId) {

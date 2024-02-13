@@ -1,6 +1,7 @@
 package com.school.users.serviceTest;
 
 import com.school.users.entity.UserEntity;
+import com.school.users.exceptions.InvalidRequestException;
 import com.school.users.exceptions.UserIdNotFoundException;
 import com.school.users.repository.UserRepository;
 import com.school.users.service.UserService;
@@ -9,15 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-
 import java.util.*;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
 public class UserServiceTest {
-
 
     @Mock
     private UserRepository repository;
@@ -114,9 +112,9 @@ public class UserServiceTest {
         when(repository.findById(user.getId())).thenReturn(Optional.of(user));
         when(repository.save(updatedUser)).thenReturn(updatedUser);
 
-        UserEntity finalizedUpdate = service.updateUser(userId, updatedUser);
+        UserEntity finalUpdate = service.updateUser(userId, updatedUser);
 
-        assertEquals(updatedUser, finalizedUpdate);
+        assertEquals(updatedUser, finalUpdate);
     }
 
     @Test
@@ -128,10 +126,56 @@ public class UserServiceTest {
     }
 
     @Test
+    public void testUpdateUserWithNullUserBody() {
+
+        long userId = 1L;
+        assertThrows(InvalidRequestException.class, () -> {
+            service.updateUser(userId, null);
+        });
+    }
+
+    @Test
     public void testUpdateUserNotFound() {
         when(repository.findById(anyLong())).thenReturn(Optional.empty());
         Assertions.assertThrows(UserIdNotFoundException.class, () -> service.updateUser(anyLong(), new UserEntity()));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    public void testPatchUpdateSuccess(){
+        long userId = 1L;
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .username("Minecraft")
+                .build();
+        UserEntity patchUpdatedUser = UserEntity.builder()
+                .id(userId)
+                .username("Dave")
+                .build();
+
+        when(repository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(repository.save(patchUpdatedUser)).thenReturn(patchUpdatedUser);
+
+        UserEntity finalPatch = service.patchUser(userId, patchUpdatedUser);
+        assertEquals(patchUpdatedUser, finalPatch);
+    }
+
+    @Test
+    public void testPatchUpdateNullBody(){
+        long userId = 1L;
+        UserEntity user = UserEntity.builder()
+                .id(userId)
+                .build();
+
+        when(repository.findById(user.getId())).thenReturn(Optional.of(user));
+        when(repository.save(any(UserEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        InvalidRequestException exception = assertThrows(InvalidRequestException.class, () -> {
+            service.patchUser(userId, null);
+        });
+
+        assertEquals("Username and password must not be null!", exception.getMessage());
+
     }
 
     @Test
